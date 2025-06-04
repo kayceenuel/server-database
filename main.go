@@ -12,7 +12,7 @@ type Image struct {
 	URL     string `json:"url"`
 }
 
-func main() {
+func getImagesHandler(w http.ResponseWriter, r *http.Request) {
 	http.HandleFunc("/images", func(w http.ResponseWriter, r *http.Request) {
 		// initialising image data
 		images := []Image{
@@ -31,9 +31,17 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		// Encode and send JSON response
-		json.NewEncoder(w).Encode(images)
+		// Encode images to JSON and write to the response
+		if err := json.NewEncoder(w).Encode(images); err != nil {
+			http.Error(w, "failed to encode JSON", http.StatusInternalServerError)
+		}
 	})
-	// start the http server
+
+}
+func main() {
+	// register handler for image endpoint
+	http.HandleFunc("/images", getImagesHandler)
+
+	//start the server
 	http.ListenAndServe(":8080", nil)
 }
