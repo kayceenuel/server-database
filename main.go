@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -13,7 +14,7 @@ type Image struct {
 }
 
 func getImagesHandler(w http.ResponseWriter, r *http.Request) {
-	http.HandleFunc("/images", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/images.json", func(w http.ResponseWriter, r *http.Request) {
 		// initialising image data
 		images := []Image{
 			{
@@ -27,20 +28,15 @@ func getImagesHandler(w http.ResponseWriter, r *http.Request) {
 				URL:     "https://images.unsplash.com/photo-1540979388789-6cee28a1cdc9?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80",
 			},
 		}
-		//response headers
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-
-		// Encode images to JSON and write to the response
-		if err := json.NewEncoder(w).Encode(images); err != nil {
-			http.Error(w, "failed to encode JSON", http.StatusInternalServerError)
+		imagesData, err := json.Marshal(images) 
+		if err != nil {
+			log.fatalf("Error occured during marshaling. Error: %s", err.Error())
 		}
-	})
-
+		fmt.println(string(imagesData))
 }
 func main() {
 	// register handler for image endpoint
-	http.HandleFunc("/images", getImagesHandler)
+	http.HandleFunc("/images.json", getImagesHandler)
 
 	//start the server
 	http.ListenAndServe(":8080", nil)
