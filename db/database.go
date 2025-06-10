@@ -18,15 +18,23 @@ func Connect() error {
 		return fmt.Errorf("DATABASE_URL environment Variable not set")
 	}
 
-	// connection pool
+	// Initialize the connection pool
 	var err error
 	Pool, err = pgxpool.New(context.Background(), connString)
 	if err != nil {
 		return fmt.Errorf("failed to create connection pool: %v", err)
 	}
-	//verify the connection
+	//verify the connection with context
 	if err := Pool.Ping(context.Background()); err != nil {
 		return fmt.Errorf("failed to ping databse: %v", err)
 	}
 	fmt.Println("Successfully created connection Pool")
+}
+
+// Close terminates the connection Pool
+func Close() {
+	if Pool != nil {
+		Pool.Close()
+		fmt.Println("Connection pool Closed")
+	}
 }
