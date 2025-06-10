@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -31,7 +33,19 @@ func imagesHandler(w http.ResponseWriter, r *http.Request) {
 			URL:     "https://images.unsplash.com/photo-1540979388789-6cee28a1cdc9?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80",
 		},
 	}
+	//handler using pool
+	rows, err := db.Pool.Query(context.Background(), "SELECT title, url, alt_text FROM images")
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
+	err = rows.Ping(context.Background())
+	if err != nil {
+		http.Error(w, "could not ping database")
+	}
+	fmt.Println("Connected to the database!")
 	// check for "indent" query parameter
 	indentParam := r.URL.Query().Get("indent")
 	indent := 0
@@ -69,7 +83,8 @@ func main() {
 	// HTTP Handler
 	http.HandleFunc("/images.json", imagesHandler)
 
-	//start the server
+	// Start the server
+	log.Println("Server starting on :8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
