@@ -67,7 +67,7 @@ func main() {
 	defer db.Close() // closes the pool connection when the app exists
 
 	// HTTP Handler
-	http.HandleFunc("/images.json", handleImages)
+	http.HandleFunc("/images.json", imagesHandler)
 
 	//start the server
 	if err := http.ListenAndServe(":8080", nil); err != nil {
