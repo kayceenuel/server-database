@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"server-database/db"
 )
 
 // Image represents the structure of the image data.
@@ -15,7 +17,7 @@ type Image struct {
 	URL     string `json:"url"`
 }
 
-func handleImages(w http.ResponseWriter, r *http.Request) {
+func imagesHandler(w http.ResponseWriter, r *http.Request) {
 	// image data in json format
 	images := []Image{
 		{
@@ -58,7 +60,16 @@ func handleImages(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// initial the connection pool
+	if err := db.Connect(); err != nil {
+		log.Fatalf("Error connecting to database %v", err)
+	}
+	defer db.Close() // closes the pool connection when the app exists
+
+	// HTTP Handler
 	http.HandleFunc("/images.json", handleImages)
+
+	//start the server
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
