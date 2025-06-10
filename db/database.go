@@ -4,37 +4,47 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Pool holds the db connection pool
+// Pool holds the database connection pool
 var Pool *pgxpool.Pool
 
+// Connect establishes a connection pool to PostgreSQL
 func Connect() error {
-	//load the connection string from the .env var
+	// Load the connection string from environment variable
 	connString := os.Getenv("DATABASE_URL")
 	if connString == "" {
-		return fmt.Errorf("DATABASE_URL environment Variable not set")
+		return fmt.Errorf("DATABASE_URL environment variable not set")
 	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
 
 	// Initialize the connection pool
 	var err error
-	Pool, err = pgxpool.New(context.Background(), connString)
+	Pool, err = pgxpool.New(ctx, connString)
 	if err != nil {
 		return fmt.Errorf("failed to create connection pool: %v", err)
 	}
-	//verify the connection with context
-	if err := Pool.Ping(context.Background()); err != nil {
-		return fmt.Errorf("failed to ping databse: %v", err)
+
+	// Verify the connection
+	if err := Pool.Ping(ctx); err != nil {
+		Pool.Close() // Clean up on ping failure
+		return fmt.Errorf("failed to ping database: %v", err)
 	}
-	fmt.Println("Successfully created connection Pool")
+
+	fmt.Println("Successfully connected to database")
+	return nil
 }
 
-// Close terminates the connection Pool
+// Close terminates the connection pool
 func Close() {
 	if Pool != nil {
 		Pool.Close()
-		fmt.Println("Connection pool Closed")
+		fmt.Println("Database connection pool closed")
 	}
 }
