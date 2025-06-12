@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"server-database/db"
+
+	"github.com/joho/godotenv"
 )
 
 // Image represents the structure of the image data.
@@ -72,6 +74,11 @@ func imagesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// load environment variable from .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No, .env file found, using system enviroment variables")
+	}
 	// Initialize the connection pool
 	if err := db.Connect(); err != nil {
 		log.Fatalf("Error connecting to database: %v", err)
