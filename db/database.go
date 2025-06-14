@@ -20,7 +20,7 @@ func Connect() error {
 		return fmt.Errorf("DATABASE_URL environment variable not set")
 	}
 
-	// Create context with timeout
+	// context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
@@ -33,7 +33,7 @@ func Connect() error {
 
 	// Verify the connection
 	if err := Pool.Ping(ctx); err != nil {
-		Pool.Close() // Clean up on ping failure
+		Pool.Close()
 		return fmt.Errorf("failed to ping database: %v", err)
 	}
 
