@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"server-database/db"
+	"server-database/models"
 )
 
 // ImagesHandler handles both GET and POST requests for images
@@ -24,7 +25,7 @@ func ImagesHandler(w http.ResponseWriter, r *http.Request) {
 
 func handleGetImages(w http.ResponseWriter, r *http.Request) {
 	// Query database for images
-	images, err := db.GetAllImages(context.Background())
+	images, err := db.GetAllImages(r.Context())
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -58,5 +59,27 @@ func handleGetImages(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlePostImages(w http.ResponseWriter, r *http.Request) {
-	// FOR POST logic
+	var img models.Image
+	if err := json.NewDecoder(r.Body).Decode(&img); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	if err := img.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Insert into database
+	_, err := db.Pool.Exec(context.Background(),
+		"INSERT INTO images (title, alt_text, url) VALUES ($1, $2, $3)",
+		img.Title, img.AltText, img.URL)
+	if err != nil {
+		http.Error(w, "Failed to insert image", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(img)
 }
