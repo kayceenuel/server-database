@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -65,21 +64,31 @@ func handlePostImages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validate the image
 	if err := img.Validate(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Insert into database
-	_, err := db.Pool.Exec(context.Background(),
-		"INSERT INTO images (title, alt_text, url) VALUES ($1, $2, $3)",
-		img.Title, img.AltText, img.URL)
+	// Check for duplicate URL
+	exists, err := db.CheckDuplicateURL(r.Context(), img.URL)
 	if err != nil {
-		http.Error(w, "Failed to insert image", http.StatusInternalServerError)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	if exists {
+		http.Error(w, "Image with this URL already exists", http.StatusConflict)
+		return
+	}
+
+	// Insert into database
+	newImage, err := db.InsertImage(r.Context(), img)
+	if err != nil {
+		http.Error(w, "Failed to create image", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(img)
+	json.NewEncoder(w).Encode(newImage)
 }
