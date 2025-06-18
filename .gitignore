@@ -1,1 +1,32 @@
+# Compiled binaries
+server-database
+server-database.exe
+
+# Environment files
 .env
+
+# Go workspace files
+go.work
+go.work.sum
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
