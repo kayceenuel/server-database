@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"server-database/models"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Pool holds the database connection pool
 var Pool *pgxpool.Pool
 
 // Connect establishes a connection pool to PostgreSQL
@@ -20,7 +20,7 @@ func Connect() error {
 		return fmt.Errorf("DATABASE_URL environment variable not set")
 	}
 
-	// context with timeout
+	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
@@ -33,7 +33,7 @@ func Connect() error {
 
 	// Verify the connection
 	if err := Pool.Ping(ctx); err != nil {
-		Pool.Close()
+		Pool.Close() // Clean up on ping failure
 		return fmt.Errorf("failed to ping database: %v", err)
 	}
 
@@ -47,4 +47,28 @@ func Close() {
 		Pool.Close()
 		fmt.Println("Database connection pool closed")
 	}
+}
+
+// GetAllImages retrieves all images from the database
+func GetAllImages(ctx context.Context) ([]models.Image, error) {
+	rows, err := Pool.Query(ctx, "SELECT id, title, alt_text, url FROM images")
+	if err != nil {
+		return nil, fmt.Errorf("failed to query images: %v", err)
+	}
+	defer rows.Close()
+
+	var images []models.Image
+	for rows.Next() {
+		var img models.Image
+		if err := rows.Scan(&img.ID, &img.Title, &img.AltText, &img.URL); err != nil {
+			return nil, fmt.Errorf("failed to scan image: %v", err)
+		}
+		images = append(images, img)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %v", err)
+	}
+
+	return images, nil
 }
