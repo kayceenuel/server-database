@@ -86,10 +86,10 @@ func InsertImage(ctx context.Context, img models.Image) (*models.Image, error) {
 	return &newImage, nil
 }
 
-// checkDuplicate prevents duplicate URls
-func checkDuplicateURL(ctx context.Context, url string) (bool, error) {
+// CheckDuplicateURL prevents duplicate URLs
+func CheckDuplicateURL(ctx context.Context, url string) (bool, error) {
 	var count int
-	err := Pool.QueryRow(ctx, "SELECT COUNT(*) FROM images WHERE url =$1", url).Scan(&count)
+	err := Pool.QueryRow(ctx, "SELECT COUNT(*) FROM images WHERE url = $1", url).Scan(&count)
 	if err != nil {
 		return false, fmt.Errorf("failed to check duplicate URL: %v", err)
 	}
