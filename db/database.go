@@ -72,3 +72,16 @@ func GetAllImages(ctx context.Context) ([]models.Image, error) {
 
 	return images, nil
 }
+
+// InsertImage adds a new image and returns the created image with ID
+func InsertImage(ctx context.Context, img models.Image) (*models.Image, error) {
+	var newImage models.Image
+	err := Pool.QueryRow(ctx,
+		"INSERT INTO images (title, alt_text, url) VALUES ($1, $2, $3) RETURNING id, title, alt_text, url",
+		img.Title, img.AltText, img.URL).Scan(&newImage.ID, &newImage.Title, &newImage.AltText, &newImage.URL)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert image: %v", err)
+	}
+	return &newImage, nil
+}
