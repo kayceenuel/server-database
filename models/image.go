@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 )
 
@@ -28,7 +29,7 @@ func (img *Image) Validate() error {
 		return fmt.Errorf("invalid URL format")
 	}
 
-	// Validate alt text quality (for extension tasks)
+	// Validate alt text quality
 	if err := img.validateAltText(); err != nil {
 		return err
 	}
@@ -41,10 +42,8 @@ func (img *Image) validateAltText() error {
 
 	// Check for useless alt text
 	uselessTexts := []string{"image", "photo", "picture", "img"}
-	for _, useless := range uselessTexts {
-		if altText == useless {
-			return fmt.Errorf("alt text too generic: '%s'", img.AltText)
-		}
+	if slices.Contains(uselessTexts, altText) {
+		return fmt.Errorf("alt text too generic: '%s'", img.AltText)
 	}
 
 	if len(altText) < 5 {
